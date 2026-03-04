@@ -1,0 +1,18 @@
+# 运行时
+.env
+logs/
+*.log
+*.pid
+backend/price_cache.db
+backend/company_cache.json
+feedback/20*/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 前端
+frontend-react/node_modules/
+frontend-react/dist/

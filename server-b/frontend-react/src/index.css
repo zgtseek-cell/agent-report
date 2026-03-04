@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply text-slate-100 antialiased;
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-5;
+  }
+
+  .input-glow {
+    @apply w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10
+           focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500
+           outline-none text-sm text-white placeholder:text-slate-500
+           transition-all duration-300 antialiased;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+           bg-emerald-theme hover:bg-emerald-hover text-slate-950
+           text-sm font-medium shadow-lg shadow-emerald-theme/30 transition
+           disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+           border border-white/10 text-slate-300 hover:border-emerald-theme/50
+           hover:text-emerald-hover text-sm font-medium transition;
+  }
+
+  .markdown-body {
+    @apply text-sm leading-relaxed antialiased;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+  }
+
+  .markdown-body h1 {
+    @apply text-lg font-semibold mb-4 mt-6 first:mt-0;
+  }
+
+  .markdown-body h2 {
+    @apply text-base font-semibold mb-3 mt-5;
+  }
+
+  .markdown-body h3 {
+    @apply text-sm font-semibold mb-2 mt-4;
+  }
+
+  .markdown-body p {
+    @apply mb-3 text-slate-300;
+  }
+
+  .markdown-body ul, .markdown-body ol {
+    @apply mb-3 pl-6 text-slate-300;
+  }
+
+  .markdown-body li {
+    @apply mb-1;
+  }
+
+  .markdown-body ul li {
+    @apply list-disc;
+  }
+
+  .markdown-body ol li {
+    @apply list-decimal;
+  }
+
+  .markdown-body strong {
+    @apply font-semibold text-slate-100;
+  }
+
+  .markdown-body em {
+    @apply italic;
+  }
+
+  .markdown-body code {
+    @apply bg-white/10 px-1.5 py-0.5 rounded text-xs font-mono;
+  }
+
+  .markdown-body pre {
+    @apply bg-white/10 p-3 rounded-lg overflow-x-auto mb-3;
+  }
+
+  .markdown-body pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .markdown-body blockquote {
+    @apply border-l-2 border-emerald-theme/50 pl-4 my-3 text-slate-400 italic;
+  }
+
+  .markdown-body hr {
+    @apply my-6 border-white/10;
+  }
+}
+
+/* 微信浏览器适配 */
+@media (max-width: 767px) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

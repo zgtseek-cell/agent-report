@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+httpx
+yfinance>=0.2.40
+python-dotenv
+pydantic
+slowapi>=0.1.9
+pandas>=2.0.0
+redis>=5.0.0
+akshare>=1.12.0

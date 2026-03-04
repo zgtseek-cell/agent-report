@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+slowapi
+openai
+pydantic
+yfinance
+akshare
+httpx
+python-dotenv
+pyyaml
+reportlab
+pytest
+redis

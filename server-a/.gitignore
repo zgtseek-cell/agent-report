@@ -1,0 +1,14 @@
+# 运行时
+.env
+logs/
+*.log
+*.pid
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 本地 SSL（按需放置证书，勿提交）
+nginx/ssl/*.pem
