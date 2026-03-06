@@ -3,6 +3,14 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { Send, Loader2, Download, BarChart3, ArrowDownToLine } from 'lucide-react'
 import { apiUrl } from '../api'
+import html2canvas from 'html2canvas'
+
+// 微信环境检测工具函数
+function isWeChatBrowser() {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  return /MicroMessenger/i.test(ua)
+}
 
 function ReportView({
   analysisState,
@@ -19,6 +27,9 @@ function ReportView({
   const [statusText, setStatusText] = useState('正在连接分析服务…')
   const [metaInfo, setMetaInfo] = useState(null)
   const [autoScroll, setAutoScroll] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [savePreviewVisible, setSavePreviewVisible] = useState(false)
+  const [savePreviewDataUrl, setSavePreviewDataUrl] = useState('')
   const outputRef = useRef(null)
   const eventSourceRef = useRef(null)
 
@@ -134,17 +145,51 @@ function ReportView({
     setAutoScroll(isNearBottom)
   }
 
-  const handleDownload = () => {
-    if (!reportContent) return
-    const blob = new Blob([reportContent], { type: 'text/markdown;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `analysis-${companyName}-${new Date().toISOString().slice(0, 10)}.md`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+  const handleDownload = async () => {
+    if (!reportContent || !outputRef.current || isSaving) {
+      return
+    }
+
+    const isWeChat = isWeChatBrowser()
+
+    setIsSaving(true)
+    try {
+      // 选取报告截图根节点（report-capture-root），包含外部留白与卡片
+      const captureRoot = outputRef.current.querySelector('.report-capture-root') || outputRef.current
+
+      const canvas = await html2canvas(captureRoot, {
+        backgroundColor: '#020617', // 与整体背景色接近，避免透明背景
+        scale: window.devicePixelRatio || 2,
+        useCORS: true,
+        logging: false,
+      })
+
+      const dateStr = new Date().toISOString().slice(0, 10)
+      const safeName = (analysisState?.companyName || companyName || 'report').replace(/[\\/:*?"<>|]/g, '')
+      const filename = `${safeName}-${dateStr}.jpg`
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95)
+
+      if (isWeChat) {
+        // 微信内：弹出全屏预览层，使用 <img> 展示，方便长按保存或分享
+        setSavePreviewDataUrl(dataUrl)
+        setSavePreviewVisible(true)
+        return
+      }
+
+      // 非微信环境：仍然使用 a.download 直接下载
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (err) {
+      console.error('导出图片失败', err)
+      const errorMsg = err.message || '导出图片失败，请稍后重试'
+      alert(errorMsg)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const getHtml = () => {
@@ -184,10 +229,20 @@ function ReportView({
             {reportContent && (
               <button
                 onClick={handleDownload}
-                className="btn-secondary text-xs py-1.5"
+                disabled={isSaving}
+                className="btn-secondary text-xs py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">保存</span>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="hidden sm:inline">生成中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">保存</span>
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -197,7 +252,7 @@ function ReportView({
         <div
           ref={outputRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto rounded-xl bg-black/20 border border-white/10 p-6"
+          className="flex-1 overflow-y-auto rounded-xl bg-black/20 border border-white/10 px-2 py-6 sm:px-4"
         >
           {!reportContent && (
             <div className="flex flex-col items-center justify-center h-full text-slate-400">
@@ -206,10 +261,17 @@ function ReportView({
             </div>
           )}
           {reportContent && (
-            <div
-              className="markdown-body"
-              dangerouslySetInnerHTML={{ __html: getHtml() }}
-            />
+            <div className="report-capture-root">
+              <div className="report-card">
+                <div
+                  className="report-body markdown-body"
+                  dangerouslySetInnerHTML={{ __html: getHtml() }}
+                />
+                <div className="report-branding">
+                  生成自：投研助手 App | visestock.com · {new Date().getFullYear()}
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
@@ -233,6 +295,31 @@ function ReportView({
           </div>
         )}
       </div>
+
+      {/* 微信保存用全屏图片预览层：仅在微信浏览器中打开 */}
+      {savePreviewVisible && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center px-4">
+          <div className="max-w-md w-full flex flex-col items-center gap-4">
+            <p className="text-sm text-slate-200 text-center">
+              在微信中长按下方图片保存到相册，或点击右上角分享给好友
+            </p>
+            <div className="w-full max-h-[70vh] overflow-auto rounded-lg bg-black">
+              <img
+                src={savePreviewDataUrl}
+                alt="分析报告截图"
+                className="w-full h-auto block"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setSavePreviewVisible(false)}
+              className="btn-secondary text-xs py-1.5 w-full"
+            >
+              我已保存，关闭
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

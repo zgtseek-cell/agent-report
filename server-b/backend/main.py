@@ -381,6 +381,8 @@ def build_user_prompt(
 - 文风专业但务实，用数据说话
 - 在报告正文的第一行，你必须先输出一行快览指标（用于前端展示），格式严格如下，不要换行、不要多余字符：
   METRICS_JSON:{{"revenue_growth":"X%","cashflow_score":"良好/一般/较差","risk_level":"高/中/低","valuation_status":"低估/合理/高估","position_recommendation":"买入/持有/减持"}}
+- 紧接着在下一行输出一个 Markdown 一级标题，标题内容为：
+  # {company_name} 在 {today} 的分析
 
 最后以一段话做总结：重申这是基于公开信息的个人分析，不构成任何形式的投资建议。
 """
@@ -829,6 +831,7 @@ async def analyze_compat(request: Request, body: AnalyzeRequest):
 # 必须从 server-b 目录启动 (python -m uvicorn backend.main:app)，否则 _PROJECT_ROOT 会指向错误路径
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _FRONTEND_DIST = _PROJECT_ROOT / "frontend-react" / "dist"
+
 if _FRONTEND_DIST.exists() and _FRONTEND_DIST.is_dir():
     app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="static")
 else:

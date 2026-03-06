@@ -104,6 +104,51 @@
   .markdown-body hr {
     @apply my-6 border-white/10;
   }
+
+  /* 报告截图卡片布局（用于 html2canvas 截图） */
+  .report-capture-root {
+    @apply flex justify-center items-center;
+    padding: 12px 2vw; /* 更窄的左右留白，约 2% */
+    background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+  }
+
+  .report-card {
+    @apply relative;
+    width: 100%;
+    max-width: 960px; /* 大屏限制最大宽度，手机上基本占满可用宽度 */
+    margin: 0 auto;
+    background: #0a1120;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    padding: 20px 20px 24px 20px; /* 卡片内部留白约 20px */
+  }
+
+  .report-body {
+    @apply text-slate-100 text-justify;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .report-body h1,
+  .report-body h2,
+  .report-body h3 {
+    @apply mb-4 font-semibold text-slate-50;
+  }
+
+  .report-body p {
+    margin-bottom: 12px;
+  }
+
+  .report-body ul,
+  .report-body ol {
+    margin-bottom: 12px;
+    padding-left: 1.25rem; /* 合理缩进，列表更易读 */
+  }
+
+  .report-branding {
+    @apply mt-6 pt-3 border-t border-white/10 text-[11px] text-slate-500 text-right;
+  }
 }
 
 /* 微信浏览器适配 */
