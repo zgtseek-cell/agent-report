@@ -39,7 +39,7 @@ from .config import (
 )
 from .price import fetch_single_price_with_fallback
 from .company_cache import resolve_company
-from .company_cache import resolve_company
+from .agent_core.graph import run_investment_agent
 
 os.makedirs(Path(LOG_PATH).parent, exist_ok=True)
 os.makedirs(Path(DEBUG_LOG_PATH).parent, exist_ok=True)
@@ -93,6 +93,9 @@ def _agent_ndjson_log(message: str, data: dict | None = None, hypothesis_id: str
     except Exception:
         # 调试日志失败不能影响主流程
         pass
+
+
+_agent_ndjson_log("server_b_main_imported_with_langgraph", {}, "H0")
 
 
 client = OpenAI(
@@ -402,6 +405,82 @@ def write_log(entry: dict) -> None:
         f.write(json.dumps(entry_with_time, ensure_ascii=False) + "\n")
 
 
+def _build_metrics_payload_from_toolkit(toolkit_data: dict | None) -> dict | None:
+    if not toolkit_data:
+        return None
+
+    valuation = toolkit_data.get("valuation") or {}
+    financial_health = toolkit_data.get("financial_health") or {}
+    derived_metrics = toolkit_data.get("derived_metrics") or {}
+
+    valuation_metrics = valuation.get("valuation_metrics") or {}
+    profitability_metrics = valuation.get("profitability_metrics") or {}
+    health_metrics = financial_health.get("metrics") or {}
+
+    pe_latest = ((valuation_metrics.get("pe") or {}).get("latest"))
+    pe_mean = ((valuation_metrics.get("pe") or {}).get("historical_mean"))
+    pb_latest = ((valuation_metrics.get("pb") or {}).get("latest"))
+    roe_latest = ((profitability_metrics.get("roe") or {}).get("latest"))
+    margin_of_safety = derived_metrics.get("margin_of_safety_pct")
+
+    debt_to_equity = ((health_metrics.get("debt_to_equity") or {}).get("latest"))
+    current_ratio = ((health_metrics.get("current_ratio") or {}).get("latest"))
+
+    if margin_of_safety is None:
+        valuation_status = "合理"
+    elif margin_of_safety >= 20:
+        valuation_status = "低估"
+    elif margin_of_safety >= 0:
+        valuation_status = "合理"
+    else:
+        valuation_status = "高估"
+
+    if debt_to_equity is None and current_ratio is None:
+        risk_level = "中"
+    elif debt_to_equity is not None and debt_to_equity > 2:
+        risk_level = "高"
+    elif current_ratio is not None and current_ratio < 1:
+        risk_level = "高"
+    elif roe_latest is not None and roe_latest >= 0.15:
+        risk_level = "低"
+    else:
+        risk_level = "中"
+
+    if roe_latest is None:
+        cashflow_score = "一般"
+    elif roe_latest >= 0.15:
+        cashflow_score = "良好"
+    elif roe_latest >= 0.08:
+        cashflow_score = "一般"
+    else:
+        cashflow_score = "较差"
+
+    if valuation_status == "低估":
+        position_recommendation = "买入"
+    elif valuation_status == "高估":
+        position_recommendation = "减持"
+    else:
+        position_recommendation = "持有"
+
+    revenue_growth = "待补充"
+    if pe_latest is not None and pe_mean is not None:
+        revenue_growth = f"PE当前{pe_latest:.2f}/历史均值{pe_mean:.2f}"
+
+    return {
+        "type": "metrics",
+        "revenue_growth": revenue_growth,
+        "cashflow_score": cashflow_score,
+        "risk_level": risk_level,
+        "valuation_status": valuation_status,
+        "position_recommendation": position_recommendation,
+        "pe_latest": pe_latest,
+        "pe_historical_mean": pe_mean,
+        "pb_latest": pb_latest,
+        "roe_latest": roe_latest,
+        "margin_of_safety_pct": margin_of_safety,
+    }
+
+
 # ========== API 端点 ==========
 
 @app.get("/health")
@@ -549,12 +628,6 @@ async def analyze_sse(
     extra_prompt: str | None = None,
     position: float | None = None,
 ):
-    """
-    SSE 版分析接口（新版）
-    新增参数：
-    - position: 当前仓位百分比（0-100）
-    - market_data: 可通过 POST body 传入（或者通过内部获取）
-    """
     _agent_ndjson_log(
         "analyze_sse_enter",
         {
@@ -587,9 +660,7 @@ async def analyze_sse(
 
     req_id = str(uuid.uuid4())
     client_host = request.client.host if request.client else "unknown"
-
     print(f"[analyze_sse_request] id={req_id} company={company_name} market={market} position={position}")
-
     write_log(
         {
             "request_id": req_id,
@@ -599,37 +670,39 @@ async def analyze_sse(
             "extra_prompt_len": len(extra_prompt or ""),
             "symbol": (symbol or "").strip(),
             "position": position,
-            "type": "request_sse_v2",
+            "type": "request_sse_v3_langgraph",
         }
     )
-    _agent_log("after_write_log", {}, "H4")
 
     _FETCH_MARKET_TIMEOUT = 55
 
     async def sse_stream() -> AsyncGenerator[bytes, None]:
-        """SSE 流：先立即发 status 建立连接，再拉行情、发 meta、流式 LLM"""
         internal_market_data: Dict[str, Any] = {}
         meta_info: dict | None = None
-        user_prompt = ""
+        metrics_sent = False
+        final_toolkit_data: dict | None = None
+        first_cio_chunk_logged = False
 
         def _to_sse_data(text: str) -> bytes:
-            safe = text.replace("\r", "").replace("\n", "\\n")
+            safe = (text or "").replace("\r", "").replace("\n", "\\n")
             return f"data: {safe}\n\n".encode("utf-8")
+
+        def _to_sse_json(payload: dict) -> bytes:
+            return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8")
 
         try:
             _agent_debug_log("sse_stream_started", {}, "H2")
             _agent_ndjson_log("sse_stream_started", {}, "H2")
-            # 1) 立即发送「已连接、正在获取行情」，避免用户长时间看到「正在连接分析服务」
             status_payload = {"type": "status", "message": "正在获取行情…"}
             _agent_ndjson_log("sse_first_status", status_payload, "H2")
-            yield f"data: {json.dumps(status_payload, ensure_ascii=False)}\n\n".encode("utf-8")
+            yield _to_sse_json(status_payload)
 
-            # 2) 在流内拉行情，期间每 8 秒发一次 keepalive 避免代理/浏览器因长时间无数据关闭连接
             _agent_log("fetch_market_data_before", {}, "H4")
             loop = asyncio.get_event_loop()
             fetch_task = loop.run_in_executor(None, lambda: _fetch_market_data(company_name, market, symbol))
             keepalive_interval = 8.0
             remaining = _FETCH_MARKET_TIMEOUT
+
             try:
                 while remaining > 0:
                     wait_sec = min(keepalive_interval, remaining)
@@ -642,7 +715,7 @@ async def analyze_sse(
                     except asyncio.TimeoutError:
                         remaining -= wait_sec
                         if remaining > 0:
-                            yield ": keepalive\n\n".encode("utf-8")
+                            yield b": keepalive\n\n"
                         else:
                             fetch_task.cancel()
                             try:
@@ -657,14 +730,8 @@ async def analyze_sse(
             except Exception as e:
                 _agent_log("fetch_market_data_error", {"error": str(e)}, "H4")
                 internal_market_data = {}
+
             _agent_log("fetch_market_data_done", {"has_data": bool(internal_market_data)}, "H4")
-            _agent_debug_log(
-                "fetch_market_data_done",
-                {
-                    "has_data": bool(internal_market_data),
-                },
-                "H2",
-            )
             _agent_ndjson_log(
                 "fetch_market_data_done",
                 {
@@ -673,15 +740,6 @@ async def analyze_sse(
                 "H3",
             )
 
-            # 3) 构建 prompt 与 meta
-            user_prompt = build_user_prompt(
-                company_name=company_name,
-                market=market,
-                extra_prompt=extra_prompt,
-                position=position,
-                market_data=None,
-                internal_market_data=internal_market_data,
-            )
             if internal_market_data:
                 meta_info = {
                     "market": internal_market_data.get("market") or market,
@@ -697,15 +755,6 @@ async def analyze_sse(
             elif (symbol or "").strip() and market.lower() in ("cn", "hk", "us"):
                 meta_info = {"market": market.lower(), "symbol": (symbol or "").strip()}
 
-            _agent_log("sse_stream_started", {}, "H3")
-            _agent_debug_log(
-                "meta_and_prompt_ready",
-                {
-                    "has_meta": bool(meta_info),
-                    "has_internal_market_data": bool(internal_market_data),
-                },
-                "H2",
-            )
             if meta_info:
                 meta_payload = {
                     "type": "meta",
@@ -716,94 +765,144 @@ async def analyze_sse(
                     "position": position,
                 }
                 _agent_ndjson_log("meta_sent", meta_payload, "H3")
-                yield f"data: {json.dumps(meta_payload, ensure_ascii=False)}\n\n".encode("utf-8")
+                yield _to_sse_json(meta_payload)
 
-            metrics_sent = False
-            content_buffer = ""
-
-            def process_chunk(raw: str) -> list[bytes]:
-                """
-                尽量「原生」地把大模型流式内容透传给前端：
-                - 在检测/发送 METRICS_JSON 之前，暂存缓冲，避免把 JSON 拆碎
-                - 一旦 metrics 发送完毕，后续 chunk 直接按原样输出，不再额外聚合
-                """
-                nonlocal content_buffer, metrics_sent
-                outputs: list[bytes] = []
-
-                # 1) metrics 还没发出：先累积缓冲区，直到拿到完整 METRICS_JSON 行
-                if not metrics_sent:
-                    content_buffer += raw
-                    if "METRICS_JSON:" in content_buffer and "}" in content_buffer:
-                        try:
-                            start_idx = content_buffer.find("METRICS_JSON:")
-                            end_idx = content_buffer.find("}", start_idx) + 1
-                            metrics_str = content_buffer[start_idx + len("METRICS_JSON:"):end_idx]
-                            metrics_data = json.loads(metrics_str)
-                            metrics_event = {
-                                "type": "metrics",
-                                **metrics_data,
-                            }
-                            outputs.append(
-                                f"data: {json.dumps(metrics_event, ensure_ascii=False)}\n\n".encode("utf-8")
-                            )
-                            # metrics 前后的正文一次性输出，避免丢失
-                            before = content_buffer[:start_idx]
-                            after = content_buffer[end_idx:]
-                            if before:
-                                outputs.append(_to_sse_data(before))
-                            if after:
-                                outputs.append(_to_sse_data(after))
-                            content_buffer = ""
-                            metrics_sent = True
-                        except Exception as e:
-                            print(f"解析 metrics 数据失败: {e}")
-                            # 解析失败时，不丢弃已有内容，继续等待更多 chunk
-                    # 未解析出完整 metrics 时不输出正文，保持 JSON 完整
-                    return outputs
-
-                # 2) metrics 已经发送：后续 chunk 直接按原始内容透传
-                if raw:
-                    outputs.append(_to_sse_data(raw))
-
-                # 不再使用 content_buffer，保持为空以防意外增长
-                content_buffer = ""
-                return outputs
-
-            _agent_debug_log("deepseek_stream_start", {}, "H3")
-            _agent_ndjson_log("deepseek_stream_start", {}, "H4")
-            stream = client.chat.completions.create(
-                model=DEEPSEEK_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": user_prompt},
-                ],
-                stream=True,
-                temperature=0.7,
+            ticker = (
+                (meta_info or {}).get("symbol")
+                or internal_market_data.get("symbol")
+                or (symbol or "").strip()
             )
+            graph_market = (
+                (meta_info or {}).get("market")
+                or internal_market_data.get("market")
+                or market
+            )
+            current_price = internal_market_data.get("current_price")
 
-            _first_chunk_logged = False
-            for chunk in stream:
-                c = (chunk.choices[0].delta.content or "") if chunk.choices else ""
-                if c:
-                    if not _first_chunk_logged:
-                        _agent_debug_log(
-                            "deepseek_first_chunk",
-                            {"chunk_len": len(c)},
-                            "H3",
+            if not ticker:
+                _agent_ndjson_log("ticker_missing_after_resolution", {"company_name": company_name}, "H6")
+                yield _to_sse_data("[错误] 无法确定股票代码，无法启动智能分析。")
+                yield b"data: [DONE]\n\n"
+                return
+
+            # region agent log
+            _agent_ndjson_log(
+                "langgraph_started",
+                {
+                    "ticker": ticker,
+                    "market": graph_market,
+                    "has_price": current_price is not None,
+                },
+                "H6",
+            )
+            # endregion
+            yield _to_sse_json({"type": "status", "message": "正在启动多智能体量化分析…"})
+
+            async for event in run_investment_agent(
+                ticker=ticker,
+                market=graph_market,
+                price=current_price,
+                position=position,
+                extra_prompt=extra_prompt,
+                company_name=company_name,
+            ):
+                event_type = event.get("event", "")
+                event_name = event.get("name", "unknown")
+                metadata = event.get("metadata") or {}
+                node_name = metadata.get("langgraph_node") or metadata.get("graph_node") or event_name
+                data = event.get("data") or {}
+
+                # 【底层事件探针】观察 LangGraph / LLM 流式行为
+                if event_type in ["on_chat_model_stream", "on_chain_start", "on_chain_end", "on_tool_start"]:
+                    print(f"👉 [Event Probe] type: {event_type} | node: {node_name} | name: {event_name}")
+                if event_type == "on_chat_model_stream":
+                    chunk = data.get("chunk")
+                    content_preview = ""
+                    reasoning_preview = ""
+                    if chunk is not None:
+                        try:
+                            content_preview = str(getattr(chunk, "content", ""))[:20]
+                        except Exception:
+                            content_preview = "<content_error>"
+                        try:
+                            add_kwargs = getattr(chunk, "additional_kwargs", {}) or {}
+                            reasoning_preview = str(add_kwargs.get("reasoning_content", ""))[:20]
+                        except Exception:
+                            reasoning_preview = "<reasoning_error>"
+                    print(f"   [Stream Data] content: '{content_preview}...', reasoning: '{reasoning_preview}...'")
+
+                if event_type == "on_tool_start":
+                    tool_name = event_name or metadata.get("tool_name") or "unknown_tool"
+                    # region agent log
+                    _agent_ndjson_log(
+                        "langgraph_tool_start",
+                        {"tool_name": tool_name, "node_name": node_name},
+                        "H7",
+                    )
+                    # endregion
+                    yield _to_sse_json(
+                        {
+                            "type": "status",
+                            "message": f"正在执行量化分析：{tool_name}",
+                        }
+                    )
+                    continue
+
+                if event_type in ("on_chain_end", "on_tool_end"):
+                    output = data.get("output")
+                    if isinstance(output, dict) and output.get("toolkit_data"):
+                        final_toolkit_data = output.get("toolkit_data") or final_toolkit_data
+
+                if event_type == "on_chat_model_stream" and node_name == "cio_writer":
+                    chunk = data.get("chunk")
+                    content = getattr(chunk, "content", "")
+
+                    if isinstance(content, list):
+                        content = "".join(
+                            part.get("text", "") if isinstance(part, dict) else str(part)
+                            for part in content
                         )
-                        _first_chunk_logged = True
-                    for data in process_chunk(c):
-                        yield data
 
-            if content_buffer:
-                yield _to_sse_data(content_buffer)
+                    if content:
+                        if not first_cio_chunk_logged:
+                            # region agent log
+                            _agent_ndjson_log(
+                                "cio_writer_first_chunk",
+                                {"chunk_len": len(content)},
+                                "H8",
+                            )
+                            # endregion
+                            first_cio_chunk_logged = True
+                        yield _to_sse_data(content)
+                    continue
 
-            yield f"data: [DONE]\n\n".encode("utf-8")
+                if event_type == "on_chain_end" and node_name == "cio_writer" and not metrics_sent:
+                    output = data.get("output") or {}
+                    if isinstance(output, dict) and output.get("toolkit_data"):
+                        final_toolkit_data = output.get("toolkit_data") or final_toolkit_data
+
+                    metrics_payload = _build_metrics_payload_from_toolkit(final_toolkit_data)
+                    if metrics_payload:
+                        # region agent log
+                        _agent_ndjson_log("metrics_built", metrics_payload, "H9")
+                        # endregion
+                        yield _to_sse_json(metrics_payload)
+                        metrics_sent = True
+
+            if not metrics_sent:
+                metrics_payload = _build_metrics_payload_from_toolkit(final_toolkit_data)
+                if metrics_payload:
+                    _agent_ndjson_log("metrics_built_fallback", metrics_payload, "H9")
+                    yield _to_sse_json(metrics_payload)
+
+            _agent_ndjson_log("langgraph_stream_done", {"ticker": ticker}, "H10")
+            yield b"data: [DONE]\n\n"
 
         except Exception as e:
             _agent_log("sse_stream_exception", {"error": str(e)}, "H3")
             _agent_ndjson_log("sse_stream_exception", {"error": str(e)}, "H5")
-            yield f"data: \n[错误] {str(e)}\n\n".encode("utf-8")
+            yield _to_sse_data(f"\n[错误] {str(e)}")
+            yield b"data: [DONE]\n\n"
 
     return StreamingResponse(
         sse_stream(),

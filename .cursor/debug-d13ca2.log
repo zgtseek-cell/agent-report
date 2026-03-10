@@ -5899,3 +5899,128 @@
 {"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1772791498923, "hypothesisId": "H4"}
 {"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1772791498926, "hypothesisId": "H4"}
 {"sessionId": "d13ca2", "location": "analyze_sse", "message": "sse_stream_started", "data": {}, "timestamp": 1772791498926, "hypothesisId": "H3"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "腾讯", "market": "auto"}, "timestamp": 1773050158746, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "after_write_log", "data": {}, "timestamp": 1773050158747, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773050158749, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773050159257, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "sse_stream_started", "data": {}, "timestamp": 1773050159257, "hypothesisId": "H3"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773050314020, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "after_write_log", "data": {}, "timestamp": 1773050314021, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773050314022, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773050317482, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "sse_stream_started", "data": {}, "timestamp": 1773050317482, "hypothesisId": "H3"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773057417332, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773057417334, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773057417344, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "sse_stream_exception", "data": {"error": "The datasets could not be populated and therefore the Ratios class cannot be initialized. This is usually because no tickers are equities, you have reached the API limit or entered an invalid API key."}, "timestamp": 1773057438964, "hypothesisId": "H3"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773060208204, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773060208207, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773060208209, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "sse_stream_exception", "data": {"error": "Error code: 400 - {'error': {'message': \"Messages with role 'tool' must be a response to a preceding message with 'tool_calls'\", 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_request_error'}}"}, "timestamp": 1773060218980, "hypothesisId": "H3"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773107772044, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773107772047, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773107774669, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "sse_stream_exception", "data": {"error": "Error code: 400 - {'error': {'message': 'Missing `reasoning_content` field in the assistant message at message index 2. For more information, please refer to https://api-docs.deepseek.com/guides/thinking_mode#tool-calls', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_request_error'}}"}, "timestamp": 1773107783484, "hypothesisId": "H3"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773108273113, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773108273116, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773108275697, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773108457436, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773108457438, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773108460026, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "sse_stream_exception", "data": {"error": "Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT"}, "timestamp": 1773108516690, "hypothesisId": "H3"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773108832869, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773108832872, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773108835486, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773109651169, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773109651172, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773109653772, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773109884802, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773109884804, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773109887394, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773110318427, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773110318430, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773110321034, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773110402293, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773110402294, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773110404877, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773112621326, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773112621330, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773112623931, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773113126164, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773113126166, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773113133069, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773113452889, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773113452891, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773113455502, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773113533093, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773113533095, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773113535687, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773113872392, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773113872396, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773113875981, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773114169176, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773114169178, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773114171782, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773117687318, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773117687321, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773117687805, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773117889879, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773117889881, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773117889882, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773118455084, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773118455086, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773118455089, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773124229445, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773124229448, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773124229458, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773124440313, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773124440315, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773124440317, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773125794960, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773125794963, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773125794966, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773126341672, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773126341675, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773126341678, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773126354776, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773126354778, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773126354780, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773126968352, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773126968354, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773126968356, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773127424331, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773127424333, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773127424336, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "us"}, "timestamp": 1773127664281, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773127664283, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773127664286, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "阿里巴巴", "market": "auto"}, "timestamp": 1773128017163, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773128017165, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773128017643, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "地平线", "market": "auto"}, "timestamp": 1773128349243, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773128349245, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773128352085, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "地平线", "market": "hk"}, "timestamp": 1773129055930, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773129055932, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773129058784, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "地平线", "market": "auto"}, "timestamp": 1773130950646, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773130950648, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773130953827, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "阿里巴巴", "market": "us"}, "timestamp": 1773132758308, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773132758310, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773132760466, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "阿里", "market": "auto"}, "timestamp": 1773132773657, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773132773659, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773132775695, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "阿里", "market": "auto"}, "timestamp": 1773133586852, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773133586854, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773133586857, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "阿里", "market": "auto"}, "timestamp": 1773134149546, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773134149548, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773134149550, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "阿里", "market": "auto"}, "timestamp": 1773134163944, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773134163946, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773134163948, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773134999982, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773134999984, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773134999987, "hypothesisId": "H4"}

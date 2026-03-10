@@ -2,6 +2,8 @@ fastapi
 uvicorn
 slowapi
 openai
+langgraph
+langchain-openai
 pydantic
 yfinance
 akshare

@@ -23,7 +23,12 @@ load_dotenv()
 
 from .config import (
     CORS_ORIGINS,
+    FMP_API_KEY,
     PROXY_EXTERN_TIMEOUT,
+)
+from .finance_logic import (
+    get_company_financial_health_snapshot as get_agent_health_snapshot,
+    get_company_valuation_metrics as get_agent_valuation_metrics,
 )
 from .price import fetch_single_price, fetch_batch_prices, fetch_single_price_with_fallback
 from .financials import _get_dcf_payload, _get_financials_payload, _get_pepb_payload, _ticker_for_symbol
@@ -374,6 +379,28 @@ async def get_pepb_band(
         return payload
     except Exception:
         return {"chart": {"pe_band": {"labels": [], "datasets": []}}}
+
+
+@app.get("/api/agent-data/valuation")
+@limiter.limit("60/minute")
+async def get_agent_valuation_data(
+    request: Request,
+    ticker: str = Query(..., max_length=20),
+):
+    """供 Server B Agent 调用的估值数据接口。"""
+    _ = FMP_API_KEY
+    return get_agent_valuation_metrics(ticker)
+
+
+@app.get("/api/agent-data/health")
+@limiter.limit("60/minute")
+async def get_agent_health_data(
+    request: Request,
+    ticker: str = Query(..., max_length=20),
+):
+    """供 Server B Agent 调用的财务健康度接口。"""
+    _ = FMP_API_KEY
+    return get_agent_health_snapshot(ticker)
 
 
 @app.get("/", response_class=HTMLResponse)

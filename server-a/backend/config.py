@@ -29,6 +29,9 @@ PRICE_CACHE_DB_PATH = os.getenv("PRICE_CACHE_DB_PATH", str(_BACKEND_DIR / "price
 # Proxy timeout
 PROXY_EXTERN_TIMEOUT = int(os.getenv("PROXY_EXTERN_TIMEOUT", "30"))
 
+# FMP / FinanceToolkit
+FMP_API_KEY = os.getenv("FMP_API_KEY", "")
+
 # AkShare adjust parameter
 AKSHARE_ADJUST = os.getenv("AKSHARE_ADJUST", "")
 

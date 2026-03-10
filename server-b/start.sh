@@ -50,6 +50,35 @@ echo ""
 echo "[3/6] 安装/更新依赖..."
 pip install -q --upgrade pip
 pip install -q -r requirements.txt
+echo "  校验关键依赖导入..."
+python - <<'PY'
+import importlib
+import sys
+
+required_modules = [
+    "fastapi",
+    "uvicorn",
+    "openai",
+    "langgraph",
+    "langchain_core",
+    "langchain_openai",
+]
+
+missing = []
+for mod in required_modules:
+    try:
+        importlib.import_module(mod)
+    except Exception as exc:
+        missing.append(f"{mod}: {exc}")
+
+if missing:
+    print("依赖校验失败，以下模块不可用：", file=sys.stderr)
+    for item in missing:
+        print(f"  - {item}", file=sys.stderr)
+    sys.exit(1)
+
+print("  关键依赖校验通过")
+PY
 echo ""
 
 echo "[4/6] 配置 .env..."
@@ -120,11 +149,25 @@ nohup python -m uvicorn backend.main:app --host 0.0.0.0 --port 8001 --workers 1 
 echo $! > logs/server-b.pid
 echo "  PID: $(cat logs/server-b.pid)"
 
-sleep 2
-if curl -sf http://127.0.0.1:8001/health >/dev/null; then
+echo "  等待服务启动并执行健康检查..."
+HEALTH_OK=0
+for i in $(seq 1 15); do
+    if curl -sf http://127.0.0.1:8001/health >/dev/null; then
+        HEALTH_OK=1
+        break
+    fi
+    sleep 1
+done
+
+if [ "$HEALTH_OK" = "1" ]; then
     echo "  健康检查: 通过"
 else
-    echo "  健康检查: 未通过，请查看 tail -f logs/run.log"
+    echo "  健康检查: 未通过，服务启动异常"
+    echo "  最近日志（最后 40 行）："
+    tail -n 40 logs/run.log || true
+    echo ""
+    echo "  请检查上述报错，或执行: tail -f $ROOT/logs/run.log"
+    exit 1
 fi
 
 echo ""
