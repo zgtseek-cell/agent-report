@@ -223,6 +223,20 @@ def _build_writer_context(state: AgentState, toolkit_data: dict[str, Any]) -> di
 
             print("[Data Masking] 跨国 ADR 全地图清洗完毕，已彻底抹除所有错误市值与衍生比率。")
 
+    # 真相探针：检查 Server A 到底传回了什么 error
+    valuation_block = toolkit_data.get("valuation") or {}
+    raw_tables = valuation_block.get("raw_tables") or {}
+    error_msg = toolkit_data.get("error") or valuation_block.get("error")
+    print("===" * 20)
+    print(f"[DEBUG - API排查] Server A 传回的 error 字段内容: {error_msg}")
+    print(f"[DEBUG - API排查] raw_tables 是否为空: {not bool(raw_tables)}")
+    if isinstance(raw_tables, dict):
+        try:
+            print(f"[DEBUG - API排查] raw_tables 的 keys: {list(raw_tables.keys())}")
+        except Exception as _e:
+            print(f"[DEBUG - API排查] 无法打印 raw_tables keys: {_e}")
+    print("===" * 20)
+
     # 终极探针：打印即将喂给大模型的干净上下文
     import json as _json_debug
 
@@ -365,7 +379,7 @@ async def cio_writer(state: AgentState, config: RunnableConfig) -> AgentState:
             f"> **发布日期：** {current_date} | **首席投资官：** 价值投资 AI 核心\n"
             "> **当前市价：** [当前价格] [price_currency] | **用户当前仓位：** [当前仓位]\n"
             "> \n"
-            "> **【⚠️ 核心数据状态说明】：** (指令：你必须在此处、正文开始前，用 1-2 句话交代清楚当前的数据底座！如果 API 额度耗尽/缺少历史百分位，或者存在 ADR 跨币种情况，必须在此处进行全局声明！绝对不准漏掉这一段！)\n\n"
+            "> **【⚠️ 核心数据状态说明】：** (指令：你必须在此处用 1-2 句话交代清楚当前的数据底座！如果缺少历史估值数据，请声明“历史区间估值序列暂不可用，本报告基于最新截面快照进行分析”；如果存在 ADR 跨币种情况，也必须在此处声明。绝对不准使用“API额度耗尽”这种错误表述！)\n\n"
             "#### 一、 核心投资结论 (Executive Summary)\n"
             "(用3-4个带有加粗标题的要点，简明扼要概括结论)\n\n"
             "#### 二、 估值与安全边际深度拆解 (Valuation Deep Dive)\n"

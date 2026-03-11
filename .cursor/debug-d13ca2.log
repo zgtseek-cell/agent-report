@@ -6090,3 +6090,6 @@
 {"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773198775972, "hypothesisId": "H1"}
 {"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773198775974, "hypothesisId": "H4"}
 {"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773198775976, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "analyze_sse_entered", "data": {"company_name": "谷歌", "market": "auto"}, "timestamp": 1773200968442, "hypothesisId": "H1"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_before", "data": {}, "timestamp": 1773200968444, "hypothesisId": "H4"}
+{"sessionId": "d13ca2", "location": "analyze_sse", "message": "fetch_market_data_done", "data": {"has_data": true}, "timestamp": 1773200968447, "hypothesisId": "H4"}

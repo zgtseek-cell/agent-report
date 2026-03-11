@@ -5,6 +5,7 @@ import math
 import time
 from pathlib import Path
 from typing import Any
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -245,6 +246,84 @@ def _try_call(obj: Any, method_names: list[str]) -> tuple[str | None, Any]:
     return None, None
 
 
+def calculate_5y_pe_band(ticker_symbol: str) -> dict[str, Any]:
+    """
+    纯本地计算过去 5 年的 PE Band (市盈率通道)
+    返回字典格式：{
+        "current_pe": x,
+        "avg_pe_5y": x,
+        "upper_band_1std": x,
+        "lower_band_1std": x,
+        "data_source": "yfinance_local_calculated",
+    }
+    """
+    try:
+        ticker = yf.Ticker(ticker_symbol)
+
+        # 1. 获取过去 5 年的历史每日收盘价
+        hist_prices = ticker.history(period="5y")
+        if hist_prices.empty:
+            return {}
+
+        # 将时区信息去掉，方便后续 merge
+        try:
+            hist_prices.index = hist_prices.index.tz_localize(None)
+        except Exception:
+            # 如果已经是 naive index，直接略过
+            pass
+        price_df = hist_prices[["Close"]].copy()
+
+        # 2. 获取历史季度利润表，提取 EPS (Diluted EPS 或 Basic EPS)
+        income_stmt = ticker.quarterly_income_stmt
+        if income_stmt.empty:
+            return {}
+
+        eps_row_name = "Diluted EPS" if "Diluted EPS" in income_stmt.index else "Basic EPS"
+        if eps_row_name not in income_stmt.index:
+            return {}
+
+        # 提取 EPS 数据并转置为按日期排序的 DataFrame
+        eps_data = income_stmt.loc[eps_row_name].dropna()
+        eps_df = pd.DataFrame({"EPS": eps_data})
+        try:
+            eps_df.index = pd.to_datetime(eps_df.index).tz_localize(None)
+        except Exception:
+            eps_df.index = pd.to_datetime(eps_df.index)
+        eps_df = eps_df.sort_index()
+
+        # 3. 数据融合与计算 (将季报 EPS 填充到每天的股价上)
+        merged_df = price_df.join(eps_df, how="outer")
+        # 向前填充 EPS (在下一次财报发布前，使用上一次的 EPS)
+        merged_df["EPS"] = merged_df["EPS"].ffill()
+
+        # 剔除那些还没有 EPS 数据的早期日期，以及 EPS 为负数的无意义 PE
+        merged_df = merged_df.dropna(subset=["Close", "EPS"])
+        merged_df = merged_df[merged_df["EPS"] > 0]
+
+        if merged_df.empty:
+            return {}
+
+        # 计算每日近似 TTM PE：单季度 EPS * 4 近似 TTM
+        merged_df["PE"] = merged_df["Close"] / (merged_df["EPS"] * 4.0)
+
+        # 4. 提取统计特征
+        current_pe = float(merged_df["PE"].iloc[-1])
+        avg_pe = float(merged_df["PE"].mean())
+        std_pe = float(merged_df["PE"].std())
+
+        return {
+            "current_pe": round(current_pe, 2),
+            "avg_pe_5y": round(avg_pe, 2),
+            "upper_band_1std": round(avg_pe + std_pe, 2),
+            "lower_band_1std": round(avg_pe - std_pe, 2),
+            "data_source": "yfinance_local_calculated",
+        }
+
+    except Exception as e:
+        print(f"[Warning] 本地计算 PE Band 失败 for {ticker_symbol}: {e}")
+        return {}
+
+
 def _build_toolkit(ticker: str) -> Toolkit:
     normalized_ticker = _normalize_ticker(ticker)
     if not FMP_API_KEY:
@@ -480,12 +559,15 @@ def get_company_valuation_metrics(ticker: str) -> dict[str, Any]:
         pb_band = _calculate_valuation_band(pb_history)
         # ------------------------------
 
+        # 使用 yfinance + 本地数据计算过去 5 年的 PE Band，作为 FMP 历史数据的独立补充
+        local_pe_band_5y = calculate_5y_pe_band(normalized_ticker)
+
         # 如果 FMP 限流导致基础数据全空，给大模型一个明确的系统级 error_note
         error_note: str | None = None
         if not pe_history and not pb_history:
             error_note = (
-                "【系统底层警报】：核心财务数据API额度耗尽。请强制使用 yfinance_snapshot 中的最新估值，"
-                "并向用户提示『历史区间估值暂不可用』。"
+                "【系统底层说明】：深度历史财务比率数据暂不可用（可能因免费版API权限限制或标的缺乏历史数据）。"
+                "请强制使用 yfinance_snapshot 中的最新截面估值进行相对分析，并向用户客观声明『历史区间估值数据暂不可用』，绝对不要提及“API额度耗尽”。"
             )
 
         raw_tables: dict[str, Any] = {
@@ -509,6 +591,7 @@ def get_company_valuation_metrics(ticker: str) -> dict[str, Any]:
             "valuation_bands": {
                 "pe_band": pe_band,
                 "pb_band": pb_band,
+                "pe_band_5y_local": local_pe_band_5y,
             },
             "raw_tables": raw_tables if isinstance(raw_tables, dict) else {},
         }
