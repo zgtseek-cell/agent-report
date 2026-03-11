@@ -6,7 +6,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
+import yfinance as yf
 from financetoolkit import Toolkit
 
 from .config import FMP_API_KEY
@@ -90,6 +92,19 @@ def _safe_scalar(value: Any) -> Any:
     except Exception:
         pass
     return str(value)
+
+
+def _clean_json_payload(obj: Any) -> Any:
+    """递归清洗字典：1. 非标准Key转为字符串; 2. NaN/Inf转为None"""
+    if isinstance(obj, dict):
+        return {str(k): _clean_json_payload(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_clean_json_payload(item) for item in obj]
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    return obj
 
 
 def _sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
@@ -351,6 +366,53 @@ def _extract_intrinsic_value_payload(toolkit: Toolkit, ticker: str) -> dict[str,
     return payload
 
 
+def _get_yf_snapshot(ticker: str) -> dict:
+    """使用 yfinance 获取最新准确估值与币种信息，解决 ADR 错配问题"""
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        return {
+            "price_currency": info.get("currency", "USD"),
+            "financial_currency": info.get("financialCurrency", "USD"),
+            "yf_pe": info.get("trailingPE"),
+            "yf_pb": info.get("priceToBook"),
+            "yf_ev_ebitda": info.get("enterpriseToEbitda"),
+            "yf_market_cap": info.get("marketCap"),
+        }
+    except Exception as e:
+        print(f"[YFinance Error] 获取 {ticker} 失败: {e}")
+        return {}
+
+
+def _calculate_valuation_band(history_dict: dict) -> dict:
+    """计算历史估值通道，增加极致防呆与错误捕获"""
+    if not isinstance(history_dict, dict) or not history_dict:
+        return {}
+
+    try:
+        # 严格过滤，确保只有单一数值型才参与计算，防范嵌套字典导致的 unhashable 错误
+        values = [
+            float(v)
+            for v in history_dict.values()
+            if isinstance(v, (int, float)) and not isinstance(v, bool)
+        ]
+        if not values:
+            return {}
+
+        return {
+            "min": round(float(np.min(values)), 2),
+            "p10_extreme_undervalued": round(float(np.percentile(values, 10)), 2),
+            "p20_undervalued": round(float(np.percentile(values, 20)), 2),
+            "p50_median": round(float(np.median(values)), 2),
+            "p80_overvalued": round(float(np.percentile(values, 80)), 2),
+            "p90_extreme_overvalued": round(float(np.percentile(values, 90)), 2),
+            "max": round(float(np.max(values)), 2),
+        }
+    except Exception as e:
+        print(f"[Band Calc Error] 通道计算失败: {e}")
+        return {}
+
+
 def get_company_valuation_metrics(ticker: str) -> dict[str, Any]:
     normalized_ticker = _normalize_ticker(ticker)
     try:
@@ -407,23 +469,86 @@ def get_company_valuation_metrics(ticker: str) -> dict[str, Any]:
             else _empty_metric("roe")
         )
 
-        return {
-            "ticker": normalized_ticker,
-            "error": None,
-            "valuation_metrics": {"pe": pe_stats, "pb": pb_stats},
-            "profitability_metrics": {"roe": roe_stats},
-            "intrinsic_value": intrinsic_payload,
-            "raw_tables": {
-                "valuation_ratios": {
-                    "method": valuation_method,
-                    "data": _sanitize_value(valuation_frame) if valuation_frame is not None else None,
-                },
-                "profitability_ratios": {
-                    "method": profitability_method,
-                    "data": _sanitize_value(profitability_frame) if profitability_frame is not None else None,
-                },
-            },
+        # --- 新增：获取外挂黄金数据 ---
+        yf_snapshot = _get_yf_snapshot(normalized_ticker)
+
+        # 提取 history 时增加安全校验，防范 NoneType 或不规范字典
+        pe_history = pe_stats.get("history", {}) if isinstance(pe_stats, dict) else {}
+        pb_history = pb_stats.get("history", {}) if isinstance(pb_stats, dict) else {}
+
+        pe_band = _calculate_valuation_band(pe_history)
+        pb_band = _calculate_valuation_band(pb_history)
+        # ------------------------------
+
+        # 如果 FMP 限流导致基础数据全空，给大模型一个明确的系统级 error_note
+        error_note: str | None = None
+        if not pe_history and not pb_history:
+            error_note = (
+                "【系统底层警报】：核心财务数据API额度耗尽。请强制使用 yfinance_snapshot 中的最新估值，"
+                "并向用户提示『历史区间估值暂不可用』。"
+            )
+
+        raw_tables: dict[str, Any] = {
+            "valuation_ratios": valuation_frame.to_dict(orient="index") if isinstance(valuation_frame, pd.DataFrame) else {},
+            "profitability_ratios": profitability_frame.to_dict(orient="index") if isinstance(profitability_frame, pd.DataFrame) else {},
         }
+
+        # 1. 组装全量数据（此时可能含有 Period 键和 NaN 值）
+        response_payload: dict[str, Any] = {
+            "ticker": normalized_ticker,
+            "error": error_note,
+            "valuation_metrics": {
+                "pe": pe_stats if isinstance(pe_stats, dict) else {},
+                "pb": pb_stats if isinstance(pb_stats, dict) else {},
+            },
+            "profitability_metrics": {
+                "roe": roe_stats if isinstance(roe_stats, dict) else {},
+            },
+            "intrinsic_value": intrinsic_payload,
+            "yfinance_snapshot": yf_snapshot,
+            "valuation_bands": {
+                "pe_band": pe_band,
+                "pb_band": pb_band,
+            },
+            "raw_tables": raw_tables if isinstance(raw_tables, dict) else {},
+        }
+
+        # 【终极净化】清洗所有非法键与 NaN/Inf 浮点数
+        response_payload = _clean_json_payload(response_payload)
+
+        # 2. JSON 序列化防火墙 (严格模拟 FastAPI 的 allow_nan=False)
+        try:
+            import json
+            json.dumps(response_payload, default=str, allow_nan=False)
+            return response_payload
+
+        except ValueError as e:
+            # 捕获 NaN 遗漏等 Value 错误
+            print(
+                f"[\033[91mCRITICAL ERROR\033[0m] JSON 序列化失败 (值异常): {e}"
+            )
+            return {
+                "ticker": normalized_ticker,
+                "error": f"浮点数值异常: {str(e)}",
+                "yfinance_snapshot": yf_snapshot,
+                "valuation_bands": {
+                    "pe_band": pe_band,
+                    "pb_band": pb_band,
+                },
+            }
+        except TypeError as e:
+            print(
+                f"[\033[91mCRITICAL ERROR\033[0m] JSON 序列化失败 (键异常): {e}"
+            )
+            return {
+                "ticker": normalized_ticker,
+                "error": f"字典键异常: {str(e)}",
+                "yfinance_snapshot": yf_snapshot,
+                "valuation_bands": {
+                    "pe_band": pe_band,
+                    "pb_band": pb_band,
+                },
+            }
     except Exception as exc:
         print(f"[FinanceToolkit][ERROR] valuation failed for {normalized_ticker}: {exc}")
         _logic_ndjson_log(

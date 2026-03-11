@@ -181,6 +181,60 @@ def _build_quant_context(state: AgentState, toolkit_data: dict[str, Any]) -> dic
 
 
 def _build_writer_context(state: AgentState, toolkit_data: dict[str, Any]) -> dict[str, Any]:
+    # 【核心新增】：ADR 毒数据物理隔离墙 (Data Masking)
+    # 检查是否同时存在 yfinance 数据，且价格币种与财报币种错配（ADR 特征）
+    valuation = toolkit_data.get("valuation") or {}
+    yf_snapshot = valuation.get("yfinance_snapshot") or {}
+    price_curr = yf_snapshot.get("price_currency")
+    fin_curr = yf_snapshot.get("financial_currency")
+
+    if price_curr and fin_curr and price_curr != fin_curr:
+        # 1. 彻底斩断 intrinsic_value 里的底稿污染
+        intrinsic_data = valuation.get("intrinsic_value", {})
+        if isinstance(intrinsic_data, dict):
+            intrinsic_data.pop("inputs", None)
+            intrinsic_data.pop("raw", None)
+
+        # 2. 全地图 AOE 清洗：遍历 raw_tables 下的【所有表格】，无死角追杀毒数据
+        raw_tables = valuation.get("raw_tables", {})
+        if isinstance(raw_tables, dict):
+            # 扩大黑名单，屏蔽一切受美元市值污染的绝对值和比率
+            toxic_keywords = [
+                "price",
+                "market cap",
+                "enterprise value",
+                "ev-",
+                "ev to",
+                "earnings yield",
+                "dividend yield",
+                "free cash flow yield",
+                "fcf yield",
+            ]
+
+            for table_name, table_data in raw_tables.items():
+                if isinstance(table_data, dict):
+                    keys_to_delete = [
+                        k
+                        for k in list(table_data.keys())
+                        if any(toxic in str(k).lower() for toxic in toxic_keywords)
+                    ]
+                    for k in keys_to_delete:
+                        table_data.pop(k, None)
+
+            print("[Data Masking] 跨国 ADR 全地图清洗完毕，已彻底抹除所有错误市值与衍生比率。")
+
+    # 终极探针：打印即将喂给大模型的干净上下文
+    import json as _json_debug
+
+    try:
+        final_context_str = _json_debug.dumps(toolkit_data, ensure_ascii=False, default=str)
+        print("===" * 20)
+        print(f"[DEBUG] 喂给 CIO 的最终上下文是否包含 80.91: {'80.91' in final_context_str}")
+        print(f"[DEBUG] 是否还残留 Yield 关键字: {'yield' in final_context_str.lower()}")
+        print("===" * 20)
+    except Exception as _e:
+        print(f"[DEBUG] writer_context dump failed: {_e}")
+
     return {
         "current_system_date": datetime.now().strftime("%Y年%m月%d日"),
         "symbol": state.get("symbol", ""),
@@ -282,7 +336,12 @@ async def cio_writer(state: AgentState, config: RunnableConfig) -> AgentState:
         "G2",
     )
     # endregion agent log
-    llm = _build_llm(temperature=0.2)
+    # 【终极防幻觉纪律】：强制使用 V3 (deepseek-chat) 替代 R1，并彻底锁死温度
+    # V3 在遵循极其严格的 System Prompt（如绝对不准使用某些数据）时，表现远比爱发散的 R1 听话。
+    llm = _build_llm(
+        model_name="deepseek-chat",
+        temperature=0.01,  # 降至冰点，彻底抹杀创造性幻觉
+    )
 
     current_date = datetime.now().strftime("%Y年%m月%d日")
     system_message = SystemMessage(
@@ -304,7 +363,9 @@ async def cio_writer(state: AgentState, config: RunnableConfig) -> AgentState:
             "【强制输出机构级长篇模板】（必须严格按此结构，每个模块必须进行长篇深度展开）：\n\n"
             "### 深度投资备忘录：[股票名称] ([股票代码])\n"
             f"> **发布日期：** {current_date} | **首席投资官：** 价值投资 AI 核心\n"
-            "> **当前市价：** [当前价格] [price_currency] | **用户当前仓位：** [当前仓位]\n\n"
+            "> **当前市价：** [当前价格] [price_currency] | **用户当前仓位：** [当前仓位]\n"
+            "> \n"
+            "> **【⚠️ 核心数据状态说明】：** (指令：你必须在此处、正文开始前，用 1-2 句话交代清楚当前的数据底座！如果 API 额度耗尽/缺少历史百分位，或者存在 ADR 跨币种情况，必须在此处进行全局声明！绝对不准漏掉这一段！)\n\n"
             "#### 一、 核心投资结论 (Executive Summary)\n"
             "(用3-4个带有加粗标题的要点，简明扼要概括结论)\n\n"
             "#### 二、 估值与安全边际深度拆解 (Valuation Deep Dive)\n"
